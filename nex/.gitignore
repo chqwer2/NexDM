@@ -1,0 +1,8 @@
+*.pyc
+data/
+runs/
+command/
+.vscode/
+.pytest_cache
+*.sub
+exp/
