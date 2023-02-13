@@ -140,6 +140,7 @@ def computeHomographies(sfm, feature, planes):
   planes_mat = pt.Tensor(planes).view(-1, 1, 1)
   return (ref_k @ (Ha + Hb / (-planes_mat - Hc))) @ ki
 
+
 def computeHomoWarp(sfm, input_shape, input_offset,
                     output_shape, selection,
                     feature, planes, inv=False, inv_offset = False):

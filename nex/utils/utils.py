@@ -47,18 +47,23 @@ def getDatasetScale(dpath, deepview_width, llff_width):
   else:
     return 1
 
-def generateSubsetSamplers(dataset_size, ratio=0.8, random_seed=0):
+# TODO
+def generateSubsetSamplers(dataset_size, ratio=0.8, random_seed=0, use_onlyone=True):
   indices = list(range(dataset_size))
   np.random.seed(random_seed)
   np.random.shuffle(indices)
 
   split = int(np.round(ratio * dataset_size))
+  if use_onlyone:
+    split = 1
   train_indices, val_indices = indices[:split], indices[split:]
 
   return SubsetRandomSampler(train_indices), SubsetRandomSampler(val_indices)
 
-def prepareDataloaders(dataset, dpath, random_split=False, train_ratio=1, num_workers=8):
+# TODO
+def prepareDataloaders(dataset, dpath, random_split=False, train_ratio=1, num_workers=8, use_onlyone=True):
   if random_split:
+
     sampler_train, sampler_val = generateSubsetSamplers(len(dataset), ratio=train_ratio, num_workers = num_workers)
     dataloader_train = DataLoader(dataset, batch_size=1, sampler=sampler_train)
     dataloader_val = DataLoader(dataset, batch_size=1, sampler=sampler_val)
@@ -83,14 +88,21 @@ def prepareDataloaders(dataset, dpath, random_split=False, train_ratio=1, num_wo
       return list(map(lambda x: str(os.path.basename(x)).lower(), list_of_path))
 
     if os.path.exists(os.path.join(dpath,'poses_bounds.npy')):
+      print("First IF")  # Run Here
       #LLFF dataset which is use every 8 images to be training data
       indices_total = list(range(len(dataset.imgs)))
-      indices_val = indices_total[::8]
-      indices_train = list(filter(lambda x: x not in indices_val, indices_total))
+      if use_onlyone:
+        indices_train = indices_total[:1]
+        indices_val = list(filter(lambda x: x not in indices_train, indices_total))
+      else:
+        indices_val = indices_total[::8]
+        indices_train = list(filter(lambda x: x not in indices_val, indices_total))
     elif os.path.exists(os.path.join(dpath,'transforms_train.json')):
+      print("transform")
       indices_train = dataset.sfm.index_split[0]
       indices_val = dataset.sfm.index_split[1]
     else:
+      print("else")
       indices_train = get_indices('train')
       indices_val = get_indices('val')
       # save indices to sfm for render propose
@@ -113,11 +125,13 @@ def prepareDataloaders(dataset, dpath, random_split=False, train_ratio=1, num_wo
         dataset.sfm.ref_t = pt.from_numpy(cam_matrix[:3,3:4])
     sampler_train = SubsetRandomSampler(indices_train)
     sampler_val = SubsetRandomSampler(indices_val)
+
     dataloader_train = DataLoader(dataset, batch_size=1, sampler = sampler_train, num_workers = num_workers)
     dataloader_val = DataLoader(dataset, batch_size=1, sampler = sampler_val, num_workers = num_workers)
     print('TRAINING IMAGES: {}'.format(len(dataloader_train)))
     print('VALIDATE IMAGES: {}'.format(len(dataloader_val)))
   return sampler_train, sampler_val, dataloader_train, dataloader_val
+
 
 def drawBottomBar(status):
   def print_there(x, y, text):
