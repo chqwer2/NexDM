@@ -270,7 +270,7 @@ def get_viewing_angle(sfm, feature, ref_coords, planes):
   return view[:,:,None], xyz[:,:,None]
 
 class Network(nn.Module):
-  def __init__(self, shape, sfm, k0_only=False):
+  def __init__(self, shape, sfm, k0_only=True):
     super(Network, self).__init__()
     self.shape = [shape[2], shape[3]]
     total_cuda = pt.cuda.device_count()
@@ -399,9 +399,9 @@ class Network(nn.Module):
 
     weight = cumprod_exclusive(1 - mpi_a_sig)
     # weight [72, 1, 8000, 1], rgb [72, 3, 8000, 1],
-
+    # mpi_a_sig torch.Size([72, 1, 8000, 1]) output torch.Size([1, 3, 8000, 1])
     output = pt.sum(weight * rgb * mpi_a_sig, dim=0, keepdim=True)
-    print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig.shape} output {output.shape}")
+    # print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig.shape} output {output.shape}")
 
     return output
 
