@@ -175,7 +175,7 @@ def model_wrapper(
     firstly wrap the model function to a noise prediction model that accepts the continuous time as the input.
     We support four types of the diffusion model by setting `model_type`:
         1. "noise": noise prediction model. (Trained by predicting noise).
-        2. "x_start": data prediction model. (Trained by predicting the data x_0 at time 0).
+        2. "x_start": demo prediction model. (Trained by predicting the demo x_0 at time 0).
         3. "v": velocity prediction model. (Trained by predicting the velocity).
             The "v" prediction is derivation detailed in Appendix D of [1], and is used in Imagen-Video [2].
             [1] Salimans, Tim, and Jonathan Ho. "Progressive distillation for fast sampling of diffusion models."
@@ -240,7 +240,7 @@ def model_wrapper(
         classifier_fn: A classifier function. Only used for the classifier guidance.
         classifier_kwargs: A `dict`. A dict for the other inputs of the classifier function.
     Returns:
-        A noise prediction model that accepts the noised data and the continuous time as the inputs.
+        A noise prediction model that accepts the noised demo and the continuous time as the inputs.
     """
 
     def get_model_input_time(t_continuous):
@@ -319,9 +319,9 @@ def model_wrapper(
 class DPM_Solver:
     def __init__(self, model_fn, noise_schedule, predict_x0=False, thresholding=False, max_val=1.):
         """Construct a DPM-Solver.
-        We support both the noise prediction model ("predicting epsilon") and the data prediction model ("predicting x0").
+        We support both the noise prediction model ("predicting epsilon") and the demo prediction model ("predicting x0").
         If `predict_x0` is False, we use the solver for the noise prediction model (DPM-Solver).
-        If `predict_x0` is True, we use the solver for the data prediction model (DPM-Solver++).
+        If `predict_x0` is True, we use the solver for the demo prediction model (DPM-Solver++).
             In such case, we further support the "dynamic thresholding" in [1] when `thresholding` is True.
             The "dynamic thresholding" can greatly improve the sample quality for pixel-space DPMs with large guidance scales.
         Args:
@@ -331,7 +331,7 @@ class DPM_Solver:
                     return noise
                 ``
             noise_schedule: A noise schedule object, such as NoiseScheduleVP.
-            predict_x0: A `bool`. If true, use the data prediction model; else, use the noise prediction model.
+            predict_x0: A `bool`. If true, use the demo prediction model; else, use the noise prediction model.
             thresholding: A `bool`. Valid when `predict_x0` is True. Whether to use the "dynamic thresholding" in [1].
             max_val: A `float`. Valid when both `predict_x0` and `thresholding` are True. The max value for thresholding.
 
@@ -351,7 +351,7 @@ class DPM_Solver:
 
     def data_prediction_fn(self, x, t):
         """
-        Return the data prediction model (with thresholding).
+        Return the demo prediction model (with thresholding).
         """
         noise = self.noise_prediction_fn(x, t)
         dims = x.dim()
@@ -366,7 +366,7 @@ class DPM_Solver:
 
     def model_fn(self, x, t):
         """
-        Convert the model to the noise prediction model or the data prediction model.
+        Convert the model to the noise prediction model or the demo prediction model.
         """
         if self.predict_x0:
             return self.data_prediction_fn(x, t)
@@ -378,8 +378,8 @@ class DPM_Solver:
         Args:
             skip_type: A `str`. The type for the spacing of the time steps. We support three types:
                 - 'logSNR': uniform logSNR for the time steps.
-                - 'time_uniform': uniform time for the time steps. (**Recommended for high-resolutional data**.)
-                - 'time_quadratic': quadratic time for the time steps. (Used in DDIM for low-resolutional data.)
+                - 'time_uniform': uniform time for the time steps. (**Recommended for high-resolutional demo**.)
+                - 'time_quadratic': quadratic time for the time steps. (Used in DDIM for low-resolutional demo.)
             t_T: A `float`. The starting time of the sampling (default is T).
             t_0: A `float`. The ending time of the sampling (default is epsilon).
             N: A `int`. The total number of the spacing of the time steps.
@@ -424,8 +424,8 @@ class DPM_Solver:
             steps: A `int`. The total number of function evaluations (NFE).
             skip_type: A `str`. The type for the spacing of the time steps. We support three types:
                 - 'logSNR': uniform logSNR for the time steps.
-                - 'time_uniform': uniform time for the time steps. (**Recommended for high-resolutional data**.)
-                - 'time_quadratic': quadratic time for the time steps. (Used in DDIM for low-resolutional data.)
+                - 'time_uniform': uniform time for the time steps. (**Recommended for high-resolutional demo**.)
+                - 'time_quadratic': quadratic time for the time steps. (Used in DDIM for low-resolutional demo.)
             t_T: A `float`. The starting time of the sampling (default is T).
             t_0: A `float`. The ending time of the sampling (default is epsilon).
             device: A torch device.
@@ -885,7 +885,7 @@ class DPM_Solver:
             t_T: A `float`. The starting time of the sampling (default is T).
             t_0: A `float`. The ending time of the sampling (default is epsilon).
             h_init: A `float`. The initial step size (for logSNR).
-            atol: A `float`. The absolute tolerance of the solver. For image data, the default setting is 0.0078, followed [1].
+            atol: A `float`. The absolute tolerance of the solver. For image demo, the default setting is 0.0078, followed [1].
             rtol: A `float`. The relative tolerance of the solver. The default setting is 0.05.
             theta: A `float`. The safety hyperparameter for adapting the step size. The default setting is 0.9, followed [1].
             t_err: A `float`. The tolerance for the time. We solve the diffusion ODE until the absolute error between the
@@ -894,7 +894,7 @@ class DPM_Solver:
                 The type slightly impacts the performance. We recommend to use 'dpm_solver' type.
         Returns:
             x_0: A pytorch tensor. The approximated solution at time `t_0`.
-        [1] A. Jolicoeur-Martineau, K. Li, R. Piché-Taillefer, T. Kachman, and I. Mitliagkas, "Gotta go fast when generating data with score-based models," arXiv preprint arXiv:2105.14080, 2021.
+        [1] A. Jolicoeur-Martineau, K. Li, R. Piché-Taillefer, T. Kachman, and I. Mitliagkas, "Gotta go fast when generating demo with score-based models," arXiv preprint arXiv:2105.14080, 2021.
         """
         ns = self.noise_schedule
         s = t_T * torch.ones((x.shape[0],)).to(x)
@@ -943,7 +943,7 @@ class DPM_Solver:
         """
         Compute the sample at time `t_end` by DPM-Solver, given the initial `x` at time `t_start`.
         =====================================================
-        We support the following algorithms for both noise prediction model and data prediction model:
+        We support the following algorithms for both noise prediction model and demo prediction model:
             - 'singlestep':
                 Singlestep DPM-Solver (i.e. "DPM-Solver-fast" in the paper), which combines different orders of singlestep DPM-Solver.
                 We combine all the singlestep solvers with order <= `order` to use up all the function evaluations (steps).

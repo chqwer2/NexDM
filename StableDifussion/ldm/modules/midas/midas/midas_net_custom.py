@@ -74,7 +74,7 @@ class MidasNet_small(BaseModel):
         """Forward pass.
 
         Args:
-            x (tensor): input data (image)
+            x (tensor): input demo (image)
 
         Returns:
             tensor: depth

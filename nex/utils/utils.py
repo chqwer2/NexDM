@@ -89,7 +89,7 @@ def prepareDataloaders(dataset, dpath, random_split=False, train_ratio=1, num_wo
 
     if os.path.exists(os.path.join(dpath,'poses_bounds.npy')):
       print("First IF")  # Run Here
-      #LLFF dataset which is use every 8 images to be training data
+      #LLFF dataset which is use every 8 images to be training demo
       indices_total = list(range(len(dataset.imgs)))
       if use_onlyone:
         indices_train = indices_total[:1]

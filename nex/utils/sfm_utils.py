@@ -123,7 +123,7 @@ class SfMData:
       dataset (str): path to datasets
       ref_img (str): ref_image file name
     Returns:
-      bool: return True if successful load LLFF data
+      bool: return True if successful load LLFF demo
     """
     if not os.path.exists(os.path.join(dataset,'poses_bounds.npy')):
       return False

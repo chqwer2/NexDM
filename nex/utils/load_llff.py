@@ -1,4 +1,4 @@
-########## Slightly modified version of LLFF data loading code 
+########## Slightly modified version of LLFF demo loading code
 ##########  see https://github.com/Fyusion/LLFF for original
 
 import numpy as np
@@ -118,7 +118,7 @@ def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True):
   imgs = imgs = [imread(f)[...,:3]/255. for f in imgfiles]
   imgs = np.stack(imgs, -1)
 
-  print('Loaded image data', imgs.shape, poses[:,-1,0])
+  print('Loaded image demo', imgs.shape, poses[:,-1,0])
   return poses, bds, imgs, intrinsic_arr
 
 def normalize(x):

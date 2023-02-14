@@ -64,7 +64,7 @@ parser.add_argument('-basis_out', type=int, default=8, help='the number of coeff
 parser.add_argument('-gradloss', type=float, default=0.05, help='hyperparameter for grad loss')
 parser.add_argument('-tvc', type=float, default=0.03, help='hyperparameter for total variation regularizer')
 
-#training and eval data
+#training and eval demo
 parser.add_argument('-scene', type=str, default="", help='directory to the scene')
 parser.add_argument('-ref_img', type=str, default="",  help='reference image, camera parameter of reference image is use to create MPI')
 parser.add_argument('-dmin', type=float, default=-1, help='first plane depth')
@@ -110,7 +110,7 @@ parser.add_argument('-clean', action='store_true', help='delete old weight witho
 
 
 #miscellaneous
-parser.add_argument('-all_gpu',action='store_true',help="In multiple GPU training, We don't train MLP (data parallel) on the first GPU. This make training slower but we can utilize more VRAM on other GPU.")
+parser.add_argument('-all_gpu',action='store_true',help="In multiple GPU training, We don't train MLP (demo parallel) on the first GPU. This make training slower but we can utilize more VRAM on other GPU.")
 
 args = parser.parse_args()
 

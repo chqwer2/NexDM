@@ -13,7 +13,7 @@ def read_pfm(path):
         path (str): path to file
 
     Returns:
-        tuple: (data, scale)
+        tuple: (demo, scale)
     """
     with open(path, "rb") as file:
 
@@ -60,7 +60,7 @@ def write_pfm(path, image, scale=1):
 
     Args:
         path (str): pathto file
-        image (array): data
+        image (array): demo
         scale (int, optional): Scale. Defaults to 1.
     """
 
@@ -120,7 +120,7 @@ def resize_image(img):
         img (array): image
 
     Returns:
-        tensor: data ready for network
+        tensor: demo ready for network
     """
     height_orig = img.shape[0]
     width_orig = img.shape[1]

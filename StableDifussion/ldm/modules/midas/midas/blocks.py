@@ -142,7 +142,7 @@ class Interpolate(nn.Module):
             x (tensor): input
 
         Returns:
-            tensor: interpolated data
+            tensor: interpolated demo
         """
 
         x = self.interp(

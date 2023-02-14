@@ -68,11 +68,11 @@ model:
 
 
 data:
-  target: ldm.data.laion.WebDataModuleFromConfig
+  target: ldm.demo.laion.WebDataModuleFromConfig
   params:
     tar_base: null  # for concat as in LAION-A
     p_unsafe_threshold: 0.1
-    filter_word_list: "data/filters.yaml"
+    filter_word_list: "demo/filters.yaml"
     max_pwatermark: 0.45
     batch_size: 8
     num_workers: 6
@@ -96,7 +96,7 @@ data:
         params:
           size: 512
       postprocess:
-        target: ldm.data.laion.AddMask
+        target: ldm.demo.laion.AddMask
         params:
           mode: "512train-large"
           p_drop: 0.25
@@ -115,7 +115,7 @@ data:
         params:
           size: 512
       postprocess:
-        target: ldm.data.laion.AddMask
+        target: ldm.demo.laion.AddMask
         params:
           mode: "512train-large"
           p_drop: 0.25
