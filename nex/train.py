@@ -398,8 +398,10 @@ class Network(nn.Module):
         rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
 
     weight = cumprod_exclusive(1 - mpi_a_sig)
-    print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig}")
+    # weight [72, 1, 8000, 1], rgb [72, 3, 8000, 1],
+
     output = pt.sum(weight * rgb * mpi_a_sig, dim=0, keepdim=True)
+    print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig.shape} output {output.shape}")
 
     return output
 
