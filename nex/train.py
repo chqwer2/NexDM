@@ -385,21 +385,26 @@ class Network(nn.Module):
 
       # (layers, out_node, rays, 1)
       rgb = samples[0].permute([1, 0, 2, 3])   # Function K0
+
       cof = out[::args.sublayers, ..., node:]     # Function K
       cof = pt.repeat_interleave(cof, args.sublayers, 0)
 
       # TODO Illumination is the k0?
-      self.illumination = self.specular(sfm, feature, ref_coords, warp, self.planes, coeff = cof)
+      self.illumination = self.specular(
+           sfm, feature, ref_coords, warp, self.planes, coeff = cof)
+
       # K1 - KN
       if self.k0_only:
-        return pt.sum(rgb, dim=0, keepdim=True)
+        return rgb[0].unqueeze(0)  #, dim=0, keepdim=True)
 
       else:
         rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
 
     weight = cumprod_exclusive(1 - mpi_a_sig)
+
     # weight [72, 1, 8000, 1], rgb [72, 3, 8000, 1],
     # mpi_a_sig torch.Size([72, 1, 8000, 1]) output torch.Size([1, 3, 8000, 1])
+
     output = pt.sum(weight * rgb * mpi_a_sig, dim=0, keepdim=True)
     # print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig.shape} output {output.shape}")
 
