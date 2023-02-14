@@ -270,15 +270,18 @@ def get_viewing_angle(sfm, feature, ref_coords, planes):
   return view[:,:,None], xyz[:,:,None]
 
 class Network(nn.Module):
-  def __init__(self, shape, sfm):
+  def __init__(self, shape, sfm, k0_only=False):
     super(Network, self).__init__()
     self.shape = [shape[2], shape[3]]
     total_cuda = pt.cuda.device_count()
     mlp_first_device = 1 if (not args.all_gpu) and total_cuda > 1 else 0
     mlp_devices = list(range(mlp_first_device, total_cuda))
+
     #mpi_c (k0) as an explicit
     mpi_c = pt.empty((shape[0], 3, shape[2], shape[3]), device='cuda:0').uniform_(-1, 1)
     self.mpi_c = nn.Parameter(mpi_c)
+    self.k0_only = k0_only
+
     self.specular = Basis(shape, args.basis_out * 3).cuda()
     self.seq1 = nn.DataParallel(
       VanillaMLP(
@@ -353,7 +356,7 @@ class Network(nn.Module):
     out = self.seq1(bigcoords).cuda()
 
     node = 0
-    self.mpi_a = out[..., node:node + 1]
+    self.mpi_a = out[..., node:node + 1]     # Function A
     node += 1
     # n, 1, sel, 1
     self.mpi_a = self.mpi_a.view(self.mpi_a.shape[0], 1, self.mpi_a.shape[1], self.mpi_a.shape[2])
@@ -373,20 +376,29 @@ class Network(nn.Module):
       mpi_sig = pt.sigmoid(self.mpi_c)
       # mpi_sig: n, 3, h, w   warp: (n, sel, 1, 2)
       # Need: N, C, Din, Hin, Win;    N, Dout, Hout, Wout, 3
+
       mpi_sig3d = mpi_sig.permute([1, 0, 2, 3])[None]
       warp3d = getWarp3d(warp)
-      #samples: N, C, Dout, Hout, Wout
+
+      #samples: N, C, Dout, Hout, Wout - views?
       samples = F.grid_sample(mpi_sig3d, warp3d, align_corners=True)
+
       # (layers, out_node, rays, 1)
-      rgb = samples[0].permute([1, 0, 2, 3])
-      cof = out[::args.sublayers, ..., node:]
+      rgb = samples[0].permute([1, 0, 2, 3])   # Function K0
+      cof = out[::args.sublayers, ..., node:]     # Function K
       cof = pt.repeat_interleave(cof, args.sublayers, 0)
+
+      # TODO Illumination is the k0?
       self.illumination = self.specular(sfm, feature, ref_coords, warp, self.planes, coeff = cof)
-      # rgb: (layers, 3, rays, 1)
-      rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
+      # K1 - KN
+      if self.k0_only:
+        return pt.sum(rgb, dim=0, keepdim=True)
+
+      else:
+        rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
 
     weight = cumprod_exclusive(1 - mpi_a_sig)
-
+    print(f"shape within forward: weight {weight.shape}, rgb {rgb.shape} mpi_a_sig {mpi_a_sig}")
     output = pt.sum(weight * rgb * mpi_a_sig, dim=0, keepdim=True)
 
     return output
@@ -425,6 +437,7 @@ def getMPI(model, sfm, m = 1, dataloader = None):
   #viewing [sh_v, sh_w, 2]
   viewing = pt.cat([x_v[:,:,None].cuda(), y_v[:,:,None].cuda()], -1)
   #hinv_xy [1, sh_v, sh_w, 2 * pos_lev]
+
   hinv_xy = viewing.view(1, sh_v, sw_v, 2, 1) * model.specular.pos_freq_viewing
   hinv_xy = hinv_xy.view(1, sh_v, sw_v, -1)
   #pe_view [1, sh_v, sw_v, 2 * 2 * pos_lev]
@@ -568,7 +581,7 @@ def train():
   start_epoch = 0
 
   # revise at 20221206
-  # runpath = "runs/"
+  runpath = "runs/"
   runpath = "exp/"
   ckpt = runpath + args.model_dir + "/ckpt.pt"
   if os.path.exists(ckpt):
@@ -599,9 +612,11 @@ def train():
       else:
         vid_path = 'video_output'
         render_type = 'default'
+
       pt.cuda.empty_cache()
       render_video(model, dataset, args.ray, os.path.join(runpath, vid_path, args.model_dir),
                   render_type = render_type, dataloader = dataloader_train)
+
     if args.http:
       serve_files(args.model_dir, args.web_path)
     exit()
@@ -612,6 +627,10 @@ def train():
   writer = SummaryWriter(runpath + args.model_dir)
   writer.add_text('command',' '.join(sys.argv), 0)
   ts.tic()
+
+  # TODO Not Trained
+  # generateAlpha(model, dataset, dataloader_val, writer, runpath, 0)
+
 
    # shift by 1 epoch to save last epoch to tensorboard
   for epoch in range(start_epoch, args.epochs+1):

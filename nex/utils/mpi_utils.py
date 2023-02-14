@@ -348,6 +348,7 @@ def render_video(model, dataset, ray, video_path = 'runs/video/', render_type='d
     filepath = os.path.join(video_path, image_name)
     print('frame_{:04d}.png ({:d}/{:d})'.format(pose_id, pose_id+1, total_frame))
     io.imsave(filepath, (predict_image * 255).astype(np.uint8))
+
   if shutil.which('ffmpeg') is None:
     print("Skiping create video, No FFmpeg install on this PC.")
     return
