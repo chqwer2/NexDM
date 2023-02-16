@@ -395,7 +395,7 @@ class Network(nn.Module):
 
       # K1 - KN
       if self.k0_only:
-        return rgb[0].unqueeze(0)  #, dim=0, keepdim=True)
+        return rgb[0].unsqueeze(0)  #, dim=0, keepdim=True)
 
       else:
         rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
