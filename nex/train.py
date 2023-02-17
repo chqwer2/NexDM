@@ -270,7 +270,7 @@ def get_viewing_angle(sfm, feature, ref_coords, planes):
   return view[:,:,None], xyz[:,:,None]
 
 class Network(nn.Module):
-  def __init__(self, shape, sfm, k0_only=True):
+  def __init__(self, shape, sfm, k0_only=False, DEBUG = True):
     super(Network, self).__init__()
     self.shape = [shape[2], shape[3]]
     total_cuda = pt.cuda.device_count()
@@ -281,6 +281,7 @@ class Network(nn.Module):
     mpi_c = pt.empty((shape[0], 3, shape[2], shape[3]), device='cuda:0').uniform_(-1, 1)
     self.mpi_c = nn.Parameter(mpi_c)
     self.k0_only = k0_only
+    self.DEBUG = DEBUG
 
     self.specular = Basis(shape, args.basis_out * 3).cuda()
     self.seq1 = nn.DataParallel(
@@ -357,6 +358,10 @@ class Network(nn.Module):
 
     node = 0
     self.mpi_a = out[..., node:node + 1]     # Function A
+
+    if self.DEBUG:
+      print(f"Shape of mpi_a {self.mpi_a.shape}, out of seq1 {out.shape}, bigcoords {bigcoords.shape}, warp {warp.shape}, sel {sel.shape}, vxy {vxy.shape}, n {n.shape}")
+
     node += 1
     # n, 1, sel, 1
     self.mpi_a = self.mpi_a.view(self.mpi_a.shape[0], 1, self.mpi_a.shape[1], self.mpi_a.shape[2])
@@ -387,15 +392,19 @@ class Network(nn.Module):
       rgb = samples[0].permute([1, 0, 2, 3])   # Function K0
 
       cof = out[::args.sublayers, ..., node:]     # Function K
-      cof = pt.repeat_interleave(cof, args.sublayers, 0)
+      cof = pt.repeat_interleave(cof, args.sublayers, 0)  # same for each layer
 
       # TODO Illumination is the k0?
       self.illumination = self.specular(
            sfm, feature, ref_coords, warp, self.planes, coeff = cof)
 
+      if self.DEBUG:
+        print(
+          f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, rgb {rgb.shape}, cof {cof.shape}, feature {feature.shape}, sfm {sfm.shape}, mpi_a_sig {mpi_a_sig.shape}, ref_coords {ref_coords.shape}, self.planes {self.planes.shape}")
+
       # K1 - KN
       if self.k0_only:
-        return rgb[0].unqueeze(0)  #, dim=0, keepdim=True)
+        return rgb[0].unsqueeze(0)  #, dim=0, keepdim=True)
 
       else:
         rgb = pt.clamp(rgb + self.illumination, 0.0, 1.0)
