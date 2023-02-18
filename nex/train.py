@@ -361,6 +361,11 @@ class Network(nn.Module):
 
     if self.DEBUG:
       print(f"Shape of mpi_a {self.mpi_a.shape}, out of seq1 {out.shape}, bigcoords {bigcoords.shape}, warp {warp.shape}, sel {sel}, vxy {vxy.shape}, n {n}")
+    # mpi_a torch.Size([72, 8000, 1, 1]),
+    # out of seq1 torch.Size([72, 8000, 1, 25]),
+    # bigcoords torch.Size([72, 8000, 1, 50]),
+    # sel 8000, vxy torch.Size([72, 8000, 1, 18]), n 72
+    # warp torch.Size([72, 8000, 1, 2])
 
     node += 1
     # n, 1, sel, 1
@@ -400,7 +405,16 @@ class Network(nn.Module):
 
       if self.DEBUG:
         print(
-          f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, rgb {rgb.shape}, cof {cof.shape}, feature {feature.shape}, sfm {sfm.shape}, mpi_a_sig {mpi_a_sig.shape}, ref_coords {ref_coords.shape}, self.planes {self.planes.shape}")
+          f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, ")
+        print(f"rgb {rgb.shape}, cof {cof.shape},")
+        print(f"feature {feature.keys()} image {feature['image'].shape}")
+        print(f"mpi_a_sig {mpi_a_sig.shape}, ref_coords {ref_coords.shape}, self.planes {self.planes.shape}")
+        print(f"sfm {sfm}")
+      # mpi_sig torch.Size([12, 3, 460, 560]), warp3d torch.Size([1, 72, 8000, 1, 3]),
+      # rgb torch.Size([72, 3, 8000, 1]), cof torch.Size([72, 8000, 1, 24]),
+      # feature dict_keys(['image', 'height', 'width', 'r', 't', 'center', 'fx', 'fy', 'px', 'py', 'path']) image torch.Size([1, 3, 300, 400])
+      # mpi_a_sig torch.Size([72, 1, 8000, 1]),
+      # ref_coords torch.Size([72, 8000, 2]), self.planes (72,)
 
       # K1 - KN
       if self.k0_only:
