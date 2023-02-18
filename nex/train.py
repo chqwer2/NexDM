@@ -364,7 +364,8 @@ class Network(nn.Module):
     # mpi_a torch.Size([72, 8000, 1, 1]),
     # out of seq1 torch.Size([72, 8000, 1, 25]),
     # bigcoords torch.Size([72, 8000, 1, 50]),
-    # sel 8000, vxy torch.Size([72, 8000, 1, 18]), n 72
+    # sel 8000,
+    # vxy torch.Size([72, 8000, 1, 18]), n 72
     # warp torch.Size([72, 8000, 1, 2])
 
     node += 1
@@ -404,6 +405,7 @@ class Network(nn.Module):
            sfm, feature, ref_coords, warp, self.planes, coeff = cof)
 
       if self.DEBUG:
+        print(f"self.mpi_c {self.mpi_c.shape}")
         print(
           f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, ")
         print(f"rgb {rgb.shape}, cof {cof.shape},")
