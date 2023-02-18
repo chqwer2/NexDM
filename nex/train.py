@@ -408,6 +408,9 @@ class Network(nn.Module):
           f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, ")
         print(f"rgb {rgb.shape}, cof {cof.shape},")
         print(f"feature {feature.keys()} image {feature['image'].shape}")
+        for tag in ['fx', 'fy', 'px', 'py', 'path']:
+          print(f"feature {tag} {feature[tag].shape}")
+
         print(f"mpi_a_sig {mpi_a_sig.shape}, ref_coords {ref_coords.shape}, self.planes {self.planes.shape}")
         print(f"sfm {sfm}")
       # mpi_sig torch.Size([12, 3, 460, 560]), warp3d torch.Size([1, 72, 8000, 1, 3]),
