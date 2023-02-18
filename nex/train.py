@@ -405,7 +405,7 @@ class Network(nn.Module):
            sfm, feature, ref_coords, warp, self.planes, coeff = cof)
 
       if self.DEBUG:
-        print(f"self.mpi_c {self.mpi_c.shape}")
+        print(f"mpi_sig3d {mpi_sig3d.shape}")
         print(
           f"Shape of mpi_sig {mpi_sig.shape}, warp3d {warp3d.shape}, ")
         print(f"rgb {rgb.shape}, cof {cof.shape},")
