@@ -360,7 +360,7 @@ class Network(nn.Module):
     self.mpi_a = out[..., node:node + 1]     # Function A
 
     if self.DEBUG:
-      print(f"Shape of mpi_a {self.mpi_a.shape}, out of seq1 {out.shape}, bigcoords {bigcoords.shape}, warp {warp.shape}, sel {sel.shape}, vxy {vxy.shape}, n {n.shape}")
+      print(f"Shape of mpi_a {self.mpi_a.shape}, out of seq1 {out.shape}, bigcoords {bigcoords.shape}, warp {warp.shape}, sel {sel}, vxy {vxy.shape}, n {n}")
 
     node += 1
     # n, 1, sel, 1
