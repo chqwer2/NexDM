@@ -409,7 +409,7 @@ class Network(nn.Module):
         print(f"rgb {rgb.shape}, cof {cof.shape},")
         print(f"feature {feature.keys()} image {feature['image'].shape}")
         for tag in ['fx', 'fy', 'px', 'py', 'path']:
-          print(f"feature {tag} {np.asarray(feature[tag]).shape} feature[tag]")
+          print(f"feature {tag} {np.asarray(feature[tag]).shape} {feature[tag]}")
 
         print(f"mpi_a_sig {mpi_a_sig.shape}, ref_coords {ref_coords.shape}, self.planes {self.planes.shape}")
         print(f"sfm {sfm}")
